@@ -5,7 +5,6 @@ import styled from 'styled-components';
 import { nanoid } from "nanoid";
 import Table from 'react-bootstrap/Table';
 import IconButton from './IconButton';
-import Fuse from 'fuse.js';
 
 const shops = [
   { id: 1, name: 'Teknosa' },
@@ -24,57 +23,52 @@ const categories = [
   { id: 6, name: 'Süt Ürünleri' }
 ];
 
-// "1. Kategori ve Marketten oluşan iki obje array oluştur
-
 const Wrapper = styled.div`
-display: flex;
-flex-direction: row;
-align-items: end;
-gap: 12px;
-padding: 24px;
-`
-// 2. Form input’lar aracılığıyla kullanıcıdan yeni ürün bilgisi alacağız, 
-//ardından girilen o ürünleri bir “products” state’ine kaydedeceğiz
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+  gap: 12px;
+  padding: 24px;
+`;
+
 export function ShoppingList() {
   const [products, setProducts] = useState([]);
-
   const [productName, setProductName] = useState("");
-
   const [selectedShop, setSelectedShop] = useState(shops[0].id);
-
   const [selectedCategory, setSelectedCategory] = useState(categories[0].id);
 
-  const [filterShop, setFilterShop] = useState(null); //x
-
-
-  const filteredProducts = products.filter((product) => {
-    let result = true; // Ürüne gözükebilirsin dedik önce
-  });
+  const handleAddProduct = () => {
+    const product = {
+      id: nanoid(),
+      name: productName,
+      shop: parseInt(selectedShop),
+      category: parseInt(selectedCategory)
+    };
+    setProducts([...products, product]);
+    setProductName(""); // Add this line to clear the input field after adding a product
+  };
 
   return (
     <>
       <h2>Ürün Ekle</h2>
-      <Form>
+      <p>Ürünlerinizi ekle butonuna basarak sıralayabilir, aldıklarınızın üzerine basarak üstünü çizebilirsiniz.</p>
+      <Form onSubmit={(e) => e.preventDefault()}>
         <Wrapper>
           <Form.Control
             aria-label='Small'
-            aria-description='inputGroup-sizing-sm'
-            onChange={(e) => {
-              setProductName(e.target.value);
-            }}
+            aria-describedby='inputGroup-sizing-sm'
+            onChange={(e) => setProductName(e.target.value)}
             value={productName}
           />
           <Form.Select
             style={{ width: "25%" }}
             aria-label="Default select example"
             value={selectedShop}
-            onChange={(e) => {
-              setSelectedShop(e.target.value);
-            }}>
+            onChange={(e) => setSelectedShop(parseInt(e.target.value))}>
             <option>Market seçiniz</option>
             {shops.map((shop) => (
               <option key={shop.id} value={shop.id}>
-                {shop.name} {/* 4. Bu listeleri select input’unun içine basarken ilgili array’imizden döngüyle basalım, manuel girmeyelim. Yani map ile */}
+                {shop.name}
               </option>
             ))}
           </Form.Select>
@@ -83,47 +77,22 @@ export function ShoppingList() {
             style={{ width: "25%" }}
             aria-label="Default select example"
             value={selectedCategory}
-            onChange={(e) => {
-              setSelectedCategory(e.target.value);
-            }}>
+            onChange={(e) => setSelectedCategory(parseInt(e.target.value))}>
             <option>Kategori seçiniz</option>
             {categories.map((category) => (
-              <option key={category.id} value={category.id}> {/* 5. Döngü olarak basarken option’ların “value” kısmına 
-              kategorinin veya marketin id’sini basalım.Böylece seçtiğimizde id’yi seçmiş olacağız */}
+              <option key={category.id} value={category.id}>
                 {category.name}
               </option>
             ))}
           </Form.Select>
 
-          {/* 3. Butonun üzerinde Ürünün adını yazdığımız bir yazı kutucuğu,
-           Ürünün hangi marketten alınacağını seçtiğimiz bir select input’u,
-           Ürünün kategorisini seçtiğimiz bir select input’u olacak
-           */}
-
-          {/*  <Form.Control
-            aria-label='Small'
-            aria-description='inputGroup-sizing-sm'
-            onChange={(e) => {
-              setFilterProductName(e.target.value);
-            }}
-            value={filterProductName}
-          /> */}
           <Button
-            onClick={() => {
-              const product = {
-                name: productName,
-                category: selectedCategory,
-                shop: selectedShop,
-                id: nanoid(), /* Eklediğimiz her bir ürünün ek olarak otomatik oluşturulan rastgele bir id’si olsun
-                Yani ürünün adı (name), hangi marketten alınacağı (shop) ve kategorisinin(category) yanında bir de 
-                id’si olsun“products” state’inde array içerisine kaydederken name, shop ve category bilgilerinin 
-                yanında bu id ile beraber kaydedeceğiz */ //Burayı anlamadım. products state ne nasıl kaydettik?
-              };
-              setProducts([...products, product]);
-            }}
+            type="button"
+            onClick={handleAddProduct}
             variant='success'
             style={{ width: "25%" }}>
-            Ekle</Button>
+            Ekle
+          </Button>
         </Wrapper>
       </Form>
 
@@ -138,15 +107,11 @@ export function ShoppingList() {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((product) => ( /* Veri olarak “products” state’indeki array’i tablo oluşturmak için kullanalım.
-             “products.map(product ⇒ ......)” yaparak tablonun satırlarını teker teker oluşturacağız */
+            {products.map((product) => (
               <tr
                 style={{
                   textDecoration: product.isBought ? "line-through" : "unset",
-                }} /* Ürünün üstüne tıklayınca satın alındı olarak işaretleyelim. Satıra onClick verip hangi 
-              satırdaki ürüne tıklandıysa o ürüne “isBought: true”tarzı bir değer eklememiz lazım 
-              “products” state’imizde Satın alındı olarak işaretlenince ürünün yazısının üstü çizilsin
-              Yani o satırı temsil eden üründe “isBought” değeri true ise css ile satırın yazılarının üstünü çizelim */
+                }}
                 onClick={() => {
                   let copyProducts = [...products];
                   copyProducts = copyProducts.map((copyProduct) => {
@@ -161,23 +126,18 @@ export function ShoppingList() {
                   ) {
                     alert("Alışveriş tamamlandı");
                   }
-                  /* React’ta state’i güncellerken setState yaptığımız fonksiyonun içinde o state’in önceki haline erişebiliyorduk.
-                  Bunu kullanarak önceki hali güncellemeden hemen önce (state’in güncellenmesi için return etmeden hemen önce) 
-                  alışverişin tamamlanması koşulu uyuyorsa alert patlatabiliriz */
-                  setProducts(copyProducts); //güncelleme burası//
+                  setProducts(copyProducts);
                 }}
                 key={product.id}>
                 <td>{product.name}</td>
-                <td>{shops.find((shop) => shop.id == product.shop)?.name}</td>
-                <td>{categories.find((category) => category.id == product.category)?.name}</td>
+                <td>{shops.find((shop) => shop.id === product.shop)?.name}</td>
+                <td>{categories.find((category) => category.id === product.category)?.name}</td>
                 <td
                   onClick={(e) => {
-                    e.stopPropagation();  //bu parent'ının haberi olmaması, sadece ona etki etmesi demek. 
+                    e.stopPropagation();
                     const filteredProducts = products.filter(
-                      (currentProduct) => currentProduct.id !== product.id  //id'si eşit olmayanlardan yeni bir array üretmek. yani id'si eşit olan silinsin.
+                      (currentProduct) => currentProduct.id !== product.id
                     );
-                    /* Ürünü products state’inden silmek için, hangi ürünü silmek istiyorsak o ürünün id’sini 
-                  products.filter yaparak elemeliyiz ve çıkan yeni array’i products state’ine tekrar kaydetmeliyiz */
                     setProducts(filteredProducts);
                   }}
                   className='text-center'>
